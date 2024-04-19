@@ -14,6 +14,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -30,6 +31,7 @@ import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.event.ChangeListener;
 
 /**
@@ -93,7 +95,7 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
   /**
    * Couleur des boutons.
    */
-  private Color bouttonColor = new Color(230, 240, 255);
+  private Color buttonColor = new Color(230, 240, 255);
 
   /**
    * Constructeur de la classe.
@@ -163,7 +165,7 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
       }
     });
     startButton.setFont(new Font("", Font.PLAIN, 40));
-    startButton.setBackground(bouttonColor);
+    startButton.setBackground(buttonColor);
 
     this.nextGeneration = new JButton("Next Generation");
     nextGeneration.addActionListener(new ActionListener() {
@@ -179,16 +181,126 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     });
 
     nextGeneration.setFont(new Font("", Font.PLAIN, 40));
-    nextGeneration.setBackground(bouttonColor);
+    nextGeneration.setBackground(buttonColor);
 
-    /* Un slider allant de 1000 a 50 pour set le delais */
-    JSlider slider = new JSlider(50, 1000, 500);
+    /* Un slider allant de 1000 a 50 pour set le délais */
+    JSlider slider = new JSlider(20, 1000, 500);
     slider.addChangeListener(new ChangeListener() {
       @Override
       public void stateChanged(javax.swing.event.ChangeEvent e) {
         jeu.setDelai(slider.getMaximum() - slider.getValue());
       }
     });
+
+    /* Ajout du rendu */
+    RenduJeuDeLaVie rendu = new RenduJeuDeLaVie();
+
+    /* Un slider allant de 1 a 30 pour set le rayon */
+    JSlider rayonSlider = new JSlider(1, 30, 1);
+    rayonSlider.addChangeListener(new ChangeListener() {
+      @Override
+      public void stateChanged(javax.swing.event.ChangeEvent e) {
+        rendu.setRayon(rayonSlider.getValue());
+      }
+    });
+
+    /* des bouton pour depalcer la matrice */
+
+    int pullSpeed = 50;
+    int offset = 10;
+    // Créez un Timer pour chaque direction
+    Timer timerUp = new Timer(pullSpeed, new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        rendu.offsetY += offset;
+        rendu.repaint();
+      }
+    });
+
+    // Répétez pour timerDown, timerLeft, timerRight avec les ajustements appropriés
+    JButton up = new JButton("↑");
+    up.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mousePressed(MouseEvent e) {
+        timerUp.start();
+      }
+
+      @Override
+      public void mouseReleased(MouseEvent e) {
+        timerUp.stop();
+      }
+    });
+
+    Timer timerDown = new Timer(pullSpeed, new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        rendu.offsetY -= offset;
+        rendu.repaint();
+      }
+    });
+
+    JButton down = new JButton("↓");
+    down.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mousePressed(MouseEvent e) {
+        timerDown.start();
+      }
+
+      @Override
+      public void mouseReleased(MouseEvent e) {
+        timerDown.stop();
+      }
+    });
+
+    Timer timerLeft = new Timer(pullSpeed, new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        rendu.offsetX += offset;
+        rendu.repaint();
+      }
+    });
+
+    JButton left = new JButton("←");
+    left.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mousePressed(MouseEvent e) {
+        timerLeft.start();
+      }
+
+      @Override
+      public void mouseReleased(MouseEvent e) {
+        timerLeft.stop();
+      }
+    });
+
+    Timer timerRight = new Timer(pullSpeed, new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        rendu.offsetX -= offset;
+        rendu.repaint();
+      }
+    });
+    
+    JButton right = new JButton("→");
+    right.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mousePressed(MouseEvent e) {
+        timerRight.start();
+      }
+
+      @Override
+      public void mouseReleased(MouseEvent e) {
+        timerRight.stop();
+      }
+    });
+
+
+    /* on met les bouton dans une matrice */
+    JPanel movePanel = new JPanel();
+    movePanel.add(up);
+    movePanel.add(down);
+    movePanel.add(left);
+    movePanel.add(right);
 
     JToolBar toolBar = new JToolBar();
 
@@ -229,8 +341,13 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     });
 
     JTextArea usage = new JTextArea(
-        "Clic gauche : Placer des cellules\nClic droit : Tuer des cellules\nDrag molette : Se déplacer\nScroll : Zoomer",
-        4, 20);
+        "Placer : Click Gauche\n"
+            + "Enlever : Click Droit\n"
+            + "Zoom : Molette\n"
+            + "Déplacer : Flèches\n"
+            + "Rayon : Slider bas\n"
+            + "Vitesse : Slider haut\n",
+        6, 16);
     usage.setEditable(false);
 
     stats.add(generationLabel);
@@ -239,13 +356,25 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     stats.add(new JSeparator(SwingConstants.HORIZONTAL));
     stats.add(usage);
     stats.add(new JSeparator(SwingConstants.HORIZONTAL));
+    stats.add(rayonSlider);
+    stats.add(movePanel);
+    stats.add(new JSeparator(SwingConstants.HORIZONTAL));
     stats.add(resetButton);
+    JTextArea density = new JTextArea("Densité : ", 1, 1);
+    density.setEditable(false);
+    stats.add(density);
+    JSlider densitySlider = new JSlider(0, 100, 50);
+    densitySlider.addChangeListener(new ChangeListener() {
+      @Override
+      public void stateChanged(javax.swing.event.ChangeEvent e) {
+        jeu.setDensity((Double) (densitySlider.getValue() / 100.0));
+      }
+    });
+    stats.add(densitySlider);
     stats.add(randomFill);
     stats.setLayout(new BoxLayout(stats, BoxLayout.PAGE_AXIS));
-    this.add(stats, BorderLayout.EAST);
+    this.add(stats, BorderLayout.WEST);
 
-    /* Ajout du rendu */
-    RenduJeuDeLaVie rendu = new RenduJeuDeLaVie();
     this.add(rendu, BorderLayout.CENTER);
 
     this.setSize(defaultWidth, defaultHeight);
@@ -270,10 +399,16 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     Visiteur v = jeu.getVisiteur();
     if (v instanceof VisiteurClassique) {
       this.classiqueMode.setSelected(true);
+      this.dayAndNightMode.setSelected(false);
+      this.highLifeMode.setSelected(false);
     } else if (v instanceof VisiteurDayAndNight) {
       this.dayAndNightMode.setSelected(true);
+      this.classiqueMode.setSelected(false);
+      this.highLifeMode.setSelected(false);
     } else if (v instanceof VisiteurHighLife) {
       this.highLifeMode.setSelected(true);
+      this.classiqueMode.setSelected(false);
+      this.dayAndNightMode.setSelected(false);
     }
 
     this.repaint();
@@ -301,11 +436,8 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     private double scale = 10;
     /** Dernière commande. */
     private Commande lastCommande;
-
-    /** Centre en x. */
-    private int centreX;
-    /** Centre en y. */
-    private int centreY;
+    /** Rayon d'action des action. */
+    private int rayon = 1;
 
     /** Coordonner x de la cellule pointer par la souris. */
     private int celluleX;
@@ -319,7 +451,10 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
       this.setVisible(true);
       this.addMouseListener(this);
       this.addMouseMotionListener(this);
-      this.addMouseListener(this);
+      this.addMouseWheelListener(this);
+      // commence au centre
+      offsetX = - (int) (jeu.getxmax() * scale / 2);
+      offsetY = - (int) (jeu.getymax() * scale / 2);
     }
 
     /**
@@ -358,14 +493,14 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
      */
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-      double oldScale = scale;
+      double oldScale = this.scale;
 
       // On change la taille multiplicativement, car c'est beaucoup plus agréable
-      scale *= e.getWheelRotation() > 0 ? (scale < 2 ? 1 : 0.9) : (scale > 200 ? 1 : 1.1);
+      this.scale *= e.getWheelRotation() > 0 ? (this.scale < 1.2 ? 1 : 0.9) : (this.scale > 200 ? 1 : 1.1);
 
       // L'offset change pour que l'on zoom en centrant sur le curseur
-      offsetX -= ((e.getX() - offsetX) * ((scale / oldScale) - 1));
-      offsetY -= ((e.getY() - offsetY) * ((scale / oldScale) - 1));
+      offsetX -= ((e.getX() - offsetX) * ((this.scale / oldScale) - 1));
+      offsetY -= ((e.getY() - offsetY) * ((this.scale / oldScale) - 1));
       repaint();
     }
 
@@ -385,16 +520,57 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     }
 
     /**
+     * Setter du rayon.
+     * si le rayon est entre 0 et 30
+     * sinon on ne change pas le rayon
+     * 
+     * @param rayon le rayon a set
+     */
+    public void setRayon(int rayon) {
+      if (rayon > 0 && rayon < 30) {
+        this.rayon = rayon;
+      }
+    }
+
+    /**
      * Méthode permettant d'actualiser la cellule pointer par la souris.
      * 
      * @param e l'instance de MouseEvent
      */
-    public void actutalisecellule(MouseEvent e) {
-      centreX = e.getX() - offsetX;
-      centreY = e.getY() - offsetY;
-      celluleX = (int) ((centreX) / scale);
-      celluleY = (int) ((centreY) / scale);
+    public void actualiserCellule(MouseEvent e) {
+
+      celluleX = (int) ((e.getX() - offsetX) / scale);
+      celluleY = (int) ((e.getY() - offsetY) / scale);
     }
+
+    /**
+     * Méthode permettant de gérer les événements de la souris en cliquant.
+     * 
+     * @param lastPressed le dernier bouton pressé
+     * @param e l'instance de MouseEvent
+     */
+    private void gestionClick(int lastPressed, MouseEvent e) {
+      if (lastPressed == MouseEvent.BUTTON1) { // Si on clique gauche on ajoute des cellules
+        for (int i = -rayon; i <= rayon; i++) {
+          for (int j = -rayon; j <= rayon; j++) {
+            if ((i * i + j * j) <= (rayon * rayon)) {
+              commandeManuelle(e, new CommandeVit(jeu.getGrillexy(celluleX + i, celluleY + j)));
+            }
+          }
+        }
+      }
+
+      if (lastPressed == MouseEvent.BUTTON3) { // Si on clique droit on enlève des cellules
+        for (int i = -rayon; i <= rayon; i++) {
+          for (int j = -rayon; j <= rayon; j++) {
+            if ((i * i + j * j) <= (rayon * rayon)) {
+              commandeManuelle(e, new CommandeMeurt(jeu.getGrillexy(celluleX + i, celluleY + j)));
+            }
+          }
+        }
+      }
+    }
+      
 
     /**
      * Méthode permettant de gérer les événements de la souris en cliquant.
@@ -404,15 +580,9 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     @Override
     public void mousePressed(MouseEvent e) {
       lastPressed = e.getButton();
-      actutalisecellule(e);
+      actualiserCellule(e);
 
-      if (lastPressed == MouseEvent.BUTTON1) { // Si on clique gauche on ajoute des cellules
-        commandeManuelle(e, new CommandeVit(jeu.getGrillexy(celluleX, celluleY)));
-      }
-
-      if (lastPressed == MouseEvent.BUTTON3) { // Si on clique droit on enlève des cellules
-        commandeManuelle(e, new CommandeMeurt(jeu.getGrillexy(celluleX, celluleY)));
-      }
+      gestionClick(lastPressed, e);
 
       repaint();
     }
@@ -425,31 +595,9 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     @Override
     public void mouseDragged(MouseEvent e) {
 
-      actutalisecellule(e);
+      actualiserCellule(e);
 
-      if (lastPressed == MouseEvent.BUTTON1) { // Si on clique gauche on ajoute des cellules
-        commandeManuelle(e, new CommandeVit(jeu.getGrillexy(celluleX, celluleY)));
-      }
-
-      if (lastPressed == MouseEvent.BUTTON3) { // Si on clique droit on enlève des cellules
-        commandeManuelle(e, new CommandeMeurt(jeu.getGrillexy(celluleX, celluleY)));
-      }
-
-      if (lastPressed == MouseEvent.BUTTON2) { // Si on clique molette on déplace la grille
-        int oldOffsetX = offsetX;
-        int oldOffsetY = offsetY;
-
-        offsetX += e.getX() - centreX;
-        offsetY += e.getY() - centreY;
-
-        // On vérifie que l'on ne dépasse pas les limites de la grille
-        if (offsetX < 0 || offsetX + jeu.getxmax() * scale > this.getWidth()) {
-          offsetX = oldOffsetX;
-        }
-        if (offsetY < 0 || offsetY + jeu.getymax() * scale > this.getHeight()) {
-          offsetY = oldOffsetY;
-        }
-      }
+      gestionClick(lastPressed, e);
 
       repaint();
     }

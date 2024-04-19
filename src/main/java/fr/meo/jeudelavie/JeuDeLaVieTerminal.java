@@ -33,6 +33,8 @@ public class JeuDeLaVieTerminal implements Observateur {
 
   /**
    * Getter de la génération.
+   * 
+   * @return la génération
    */
   public int getGeneration() {
     return jeu.getGeneration();
@@ -40,6 +42,8 @@ public class JeuDeLaVieTerminal implements Observateur {
 
   /**
    * Setter de l'affichage.
+   * 
+   * @param affichage le booléen d'affichage
    */
   public void setAffichage(boolean affichage) {
     this.affichage = affichage;
@@ -47,6 +51,8 @@ public class JeuDeLaVieTerminal implements Observateur {
 
   /**
    * Getter de l'affichage.
+   * 
+   * @return le booléen d'affichage
    */
   public boolean getAffichage() {
     return affichage;
@@ -54,6 +60,8 @@ public class JeuDeLaVieTerminal implements Observateur {
 
   /**
    * Getter du nombre de cellules.
+   * 
+   * @return le nombre de cellules
    */
   public int getNbCellules() {
     return nbCellules;

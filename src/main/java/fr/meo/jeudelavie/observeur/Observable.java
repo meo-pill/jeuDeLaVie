@@ -31,6 +31,8 @@ public interface Observable {
 
   /**
    * Renvoie la liste des observateurs.
+   * 
+   * @return la liste des observateurs
    */
   public List<Observateur> getObservateurs();
 }

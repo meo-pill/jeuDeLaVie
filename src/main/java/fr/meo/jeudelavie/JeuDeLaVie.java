@@ -41,6 +41,8 @@ public class JeuDeLaVie implements Observable  {
   private List<Observateur> observateurs;
   /** Visiteur. */
   private Visiteur visiteur;
+  /** Densité de la grille. */
+  private Double density = 0.5;
 
   /** Génération. */
   private int generation;
@@ -98,7 +100,7 @@ public class JeuDeLaVie implements Observable  {
     this.generation = 0;
     for (int i = 0; i < this.xmax; i++)  {
       for (int j = 0; j < this.ymax; j++) {
-        if (Math.random() < 0.5) {
+        if (Math.random() < this.density) {
           this.grille[i][j] = new Cellule(i, j, CelluleEtatVivante.getInstance());
         } else {
           this.grille[i][j] = new Cellule(i, j, CelluleEtatMort.getInstance());
@@ -212,7 +214,6 @@ public class JeuDeLaVie implements Observable  {
    * Getter du visiteur.
    * 
    * @return le visiteur
-   * 
    */
   public Visiteur getVisiteur() {
     return this.visiteur; 
@@ -233,6 +234,7 @@ public class JeuDeLaVie implements Observable  {
 
   /**
    * Cette méthode permet de calculer la génération suivante.
+   * elle distribue un visiteur, exécute les commandes, notifie les observateurs et incrémente la génération
    */
   public void calculerGenerationSuivante() {
     this.distribueVisiteur();
@@ -288,7 +290,20 @@ public class JeuDeLaVie implements Observable  {
   }
 
   /**
+   * Setter de la densité.
+   * 
+   * @param density la nouvelle densité
+   */
+  public void setDensity(Double density) {
+    this.density = density;
+  }
+
+  /**
    * Réinitialise la grille.
+   * on tue toutes les cellules
+   * on réinitialise la génération
+   * on vide la liste des commandes
+   * on notifie les observateurs
    */
   public void reinitialiser() {
     for (int i = 0; i < this.xmax; i++) {
@@ -297,6 +312,7 @@ public class JeuDeLaVie implements Observable  {
       }
     }
     this.generation = 0;
+    this.commandes.clear();
     this.notifieObservateur();
   }
 }
