@@ -55,7 +55,7 @@
               <failOnViolation>true</failOnViolation>
               <failsOnError>true</failsOnError>
               <violationSeverity>warning</violationSeverity>
-              <cacheFile>.target/checkstyle-cachefile</cacheFile>
+              <cacheFile>./target/checkstyle-cachefile</cacheFile>
             </configuration>
           </execution>
         </executions>
