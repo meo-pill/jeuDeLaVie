@@ -299,6 +299,15 @@ public class JeuDeLaVie implements Observable  {
   }
 
   /**
+   * Getter de la densité.
+   * 
+   * @return la densité
+   */
+  public Double getDensity() {
+    return this.density;
+  }
+
+  /**
    * Réinitialise la grille.
    * on tue toutes les cellules
    * on réinitialise la génération

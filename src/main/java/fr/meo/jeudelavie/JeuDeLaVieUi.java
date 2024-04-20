@@ -10,6 +10,7 @@ import fr.meo.jeudelavie.visiteur.VisiteurDayAndNight;
 import fr.meo.jeudelavie.visiteur.VisiteurHighLife;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -22,6 +23,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -76,6 +78,14 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
    */
   private JLabel cellulesLabel;
   /**
+   * Label pour afficher la densité.
+   */
+  private JLabel densiteLabel;
+  /**
+   * Label pour les couleurs.
+   */
+  private JLabel colorLabel;
+  /**
    * Bouton pour démarrer ou mettre en pause le jeu.
    */
   private JButton startButton;
@@ -91,6 +101,10 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
    * Radio bouton pour le mode high life.
    */
   private JRadioButton highLifeMode;
+  /**
+   * Booléen pour activer les couleurs.
+   */
+  private boolean color = false;
 
   /**
    * Couleur des boutons.
@@ -204,7 +218,7 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
       }
     });
 
-    /* des bouton pour depalcer la matrice */
+    /* des bouton pour déplacer la matrice */
 
     int pullSpeed = 50;
     int offset = 10;
@@ -308,6 +322,18 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     toolBar.add(startButton);
     toolBar.add(nextGeneration);
 
+    JCheckBox colorModel = new JCheckBox();
+    colorModel.setSelected(false);
+    
+    colorModel.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        color = colorModel.isSelected();
+      }
+    });
+    
+    toolBar.add(colorModel);
+
     toolBar.add(slider);
     toolBar.add(modSelector);
 
@@ -321,6 +347,8 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
 
     this.generationLabel = new JLabel();
     this.cellulesLabel = new JLabel();
+    this.densiteLabel = new JLabel();
+    this.colorLabel = new JLabel();
 
     // Réinitialisation de la grille
     JButton resetButton = new JButton("Reset");
@@ -346,12 +374,25 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
             + "Zoom : Molette\n"
             + "Déplacer : Flèches\n"
             + "Rayon : Slider bas\n"
-            + "Vitesse : Slider haut\n",
+            + "Vitesse : Slider haut\n"
+            + "Mode : Radio bouton\n"
+            + "Couleurs : Checkbox\n"
+            + "0 voisine : Noir\n"
+            + "1 voisine : Rouge\n"
+            + "2 voisines : Orange\n"
+            + "3 voisines : Jaune\n"
+            + "4 voisines : Vert\n"
+            + "5 voisines : Bleu\n"
+            + "6 voisines : Cyan\n"
+            + "7 voisines : Magenta\n"
+            + "8 voisines : Rose\n",
         6, 16);
     usage.setEditable(false);
 
     stats.add(generationLabel);
     stats.add(cellulesLabel);
+    stats.add(densiteLabel);
+    stats.add(colorLabel);
 
     stats.add(new JSeparator(SwingConstants.HORIZONTAL));
     stats.add(usage);
@@ -362,12 +403,14 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
     stats.add(resetButton);
     JTextArea density = new JTextArea("Densité : ", 1, 1);
     density.setEditable(false);
+    density.setPreferredSize(new Dimension(100, 20));
+    density.setMaximumSize(getPreferredSize());
     stats.add(density);
-    JSlider densitySlider = new JSlider(0, 100, 50);
+    JSlider densitySlider = new JSlider(0, 200, 100);
     densitySlider.addChangeListener(new ChangeListener() {
       @Override
       public void stateChanged(javax.swing.event.ChangeEvent e) {
-        jeu.setDensity((Double) (densitySlider.getValue() / 100.0));
+        jeu.setDensity((Double) (densitySlider.getValue() / 200.0));
       }
     });
     stats.add(densitySlider);
@@ -389,6 +432,8 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
   public void actualise() {
     this.generationLabel.setText("Generation : " + this.terminal.getGeneration());
     this.cellulesLabel.setText("Cellules : " + this.terminal.getNbCellules());
+    this.densiteLabel.setText("Densité : " + jeu.getDensity());
+    this.colorLabel.setText("Couleurs : " + this.color);
 
     if (jeu.getRun()) {
       this.startButton.setText("Pause");
@@ -469,7 +514,7 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
       for (int x = 0; x < jeu.getxmax(); x++) {
         for (int y = 0; y < jeu.getymax(); y++) {
 
-          int tailleZone = (int) (scale * 0.95);
+          int tailleZone = (int) (scale);
 
           int cx = (int) (x * scale + offsetX);
           if (cx + tailleZone < 0 || cx > this.getWidth()) {
@@ -480,11 +525,48 @@ public class JeuDeLaVieUi extends JFrame implements Observateur { // Extend the 
             continue;
           }
           if (jeu.getGrillexy(x, y).estVivante()) {
+            if (color) {
+              switch (jeu.getGrillexy(x, y).nombreVoisinesVivantes(jeu)) {
+                case 0:
+                  g.setColor(Color.BLACK);
+                  break;
+                case 1:
+                  g.setColor(Color.RED);
+                  break;
+                case 2:
+                  g.setColor(Color.ORANGE);
+                  break;
+                case 3:
+                  g.setColor(Color.YELLOW);
+                  break;
+                case 4:
+                  g.setColor(Color.GREEN);
+                  break;
+                case 5:
+                  g.setColor(Color.BLUE);
+                  break;
+                case 6:
+                  g.setColor(Color.CYAN);
+                  break;
+                case 7:
+                  g.setColor(Color.MAGENTA);
+                  break;
+                case 8:
+                  g.setColor(Color.PINK);
+                  break;
+                default:
+                  g.setColor(Color.BLACK);
+                  break;
+              }
+              
+            } else {
+              g.setColor(Color.BLACK);
+            }
             g.fillRect(cx, cy, tailleZone, tailleZone);
           }
         }
       }
-
+      g.setColor(Color.BLACK);
       g.drawRect(offsetX, offsetY, (int) (jeu.getxmax() * scale), (int) (jeu.getymax() * scale));
     }
 
